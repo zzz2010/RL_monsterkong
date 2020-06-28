@@ -10,6 +10,7 @@ LEARNING_RATE = 1e-6* rate_num  # 学习率
 GAMMA = 0.99  # reward 的衰减因子，一般取 0.9 到 0.999 不等
 max_frames = 10000
 e_greed=1
+render_bool = False
 
 class ReplayMemory(object):
     def __init__(self, max_size):

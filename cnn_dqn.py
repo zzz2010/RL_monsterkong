@@ -3,7 +3,7 @@ import parl
 from parl import layers
 import paddle.fluid as fluid
 import numpy as np
- 
+
 
 
 class Model(parl.Model):
@@ -27,7 +27,7 @@ class Model(parl.Model):
         # Q = self.res(obs)
         return Q
 
-
+@parl.remote_class
 class Agent(parl.Agent):
     def __init__(self,
                  algorithm,

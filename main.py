@@ -1,6 +1,7 @@
 import os, sys
 from ple.games.snake import Snake as GameEnv
 from ple import PLE
+import parl
 from parl.utils import logger
 from parl.algorithms.fluid import DQN
 import numpy as np
@@ -114,7 +115,8 @@ def evaluate(ple_env, agent, render=False):
 
 
 def main():
-    render_bool = True
+    global render_bool
+    parl.connect('localhost:8037')
     if dummy_mode:
         render_bool=False
     if not render_bool:
