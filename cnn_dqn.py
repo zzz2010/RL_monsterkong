@@ -27,7 +27,7 @@ class Model(parl.Model):
         # Q = self.res(obs)
         return Q
 
-@parl.remote_class
+# @parl.remote_class
 class Agent(parl.Agent):
     def __init__(self,
                  algorithm,

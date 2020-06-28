@@ -116,7 +116,7 @@ def evaluate(ple_env, agent, render=False):
 
 def main():
     global render_bool
-    parl.connect('localhost:8037')
+    # parl.connect('localhost:8037')
     if dummy_mode:
         render_bool=False
     if not render_bool:
