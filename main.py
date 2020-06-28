@@ -3,13 +3,15 @@ from ple.games.snake import Snake as GameEnv
 from ple import PLE
 import parl
 from parl.utils import logger
-from parl.algorithms.fluid import DQN
+# from parl.algorithms.fluid import DQN as RL_Alg
 import numpy as np
 from config import *
-from cnn_dqn import  Model,Agent
+# from cnn_dqn import  Model,Agent
+from parl.algorithms.fluid import DDPG as RL_Alg
+from DDPG import  Model,Agent
 # from fc_dqn import  Model,Agent
 
-dummy_mode=False ###check if the model can overfit simple linear reward function
+dummy_mode=True ###check if the model can overfit simple linear reward function
 if dummy_mode:
     max_frames=10000
     GAMMA=0.0001
@@ -53,8 +55,8 @@ def run_episode(ple_env, agent, rpm):
     step = 0
     while step < max_frames:
         step += 1
-        action_index = agent.sample(obs)  # 采样动作，所有动作都有概率被尝试到
-        action = ple_env.getActionSet()[action_index]
+        act_prob = agent.sample(obs)  # 采样动作，所有动作都有概率被尝试到
+        action = ple_env.getActionSet()[np.random.choice(range(act_prob.shape[0]), p=act_prob) ]
         # 行动
         reward=get_reward(ple_env, obs, action)
 
@@ -62,7 +64,7 @@ def run_episode(ple_env, agent, rpm):
 
         next_obs =  get_env_obs(ple_env,obs)
         done = ple_env.game_over()
-        rpm.append((obs, action_index, reward, next_obs, done))
+        rpm.append((obs, act_prob, reward, next_obs, done))
 
         # train model
         if (len(rpm) > MEMORY_WARMUP_SIZE) and (step % LEARN_FREQ == 0):
@@ -96,7 +98,7 @@ def evaluate(ple_env, agent, render=False):
         step=0
         while step<max_frames:
             step+=1
-            action_index = agent.predict(obs)  # 选取最优动作
+            action_index = np.argmax(agent.predict(obs))  # 选取最优动作
 
             ### use this line to get the maximum reward in the dummy mode
             # action_index=np.argmax([get_dummy_reward(obs,ple_env.getActionSet()[action_index]) for action_index in range(agent.act_dim)])
@@ -140,9 +142,8 @@ def main():
     rpm = ReplayMemory(MEMORY_SIZE)  # DQN的经验回放池
     obs_dim = 2, width, height
     model = Model(act_dim=act_dim)
-    alg = DQN(model, act_dim=act_dim, gamma=GAMMA, lr=LEARNING_RATE)
-    agent = Agent(alg, obs_dim=obs_dim, act_dim=act_dim, e_greed=e_greed,
-                  e_greed_decrement=0.00001)  # e_greed有一定概率随机选取动作，探索
+    alg = RL_Alg(model,gamma=GAMMA, tau=0.001, actor_lr=LEARNING_RATE, critic_lr=LEARNING_RATE  )
+    agent = Agent(alg, obs_dim=obs_dim, act_dim=act_dim)  # e_greed有一定概率随机选取动作，探索
 
     # 加载模型
     best_eval_reward = -1000
@@ -169,7 +170,7 @@ def main():
         # test part
         eval_reward = evaluate(p, agent, render=render_bool)  # render=True 查看显示效果
         logger.info('episode:{}    e_greed:{}   test_reward:{}'.format(
-            episode, agent.e_greed, eval_reward))
+            episode, e_greed, eval_reward))
 
         # 保存模型到文件 ./model.ckpt
         agent.save('./model_dqn_%d.ckpt' % rate_num)

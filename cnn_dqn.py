@@ -3,7 +3,7 @@ import parl
 from parl import layers
 import paddle.fluid as fluid
 import numpy as np
-
+from config import *
 
 
 class Model(parl.Model):
@@ -33,8 +33,8 @@ class Agent(parl.Agent):
                  algorithm,
                  obs_dim,
                  act_dim,
-                 e_greed=0.1,
-                 e_greed_decrement=0):
+                  e_greed=e_greed,
+                 e_greed_decrement=0.00001):
 
         assert isinstance(act_dim, int)
         self.obs_dim = obs_dim
