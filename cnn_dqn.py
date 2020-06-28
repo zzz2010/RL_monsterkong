@@ -3,8 +3,7 @@ import parl
 from parl import layers
 import paddle.fluid as fluid
 import numpy as np
-
-from resnet import ResNet
+ 
 
 
 class Model(parl.Model):

@@ -5,8 +5,8 @@ from parl.utils import logger
 from parl.algorithms.fluid import DQN
 import numpy as np
 from config import *
-# from cnn_dqn import  Model,Agent
-from fc_dqn import  Model,Agent
+from cnn_dqn import  Model,Agent
+# from fc_dqn import  Model,Agent
 
 dummy_mode=False ###check if the model can overfit simple linear reward function
 if dummy_mode:
