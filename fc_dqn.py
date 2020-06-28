@@ -14,16 +14,16 @@ class Model(parl.Model):
         # self.res = ResNet( depth=num_layers, num_classes=act_dim)
 
         # ResNet
-        self.fc1 = layers.conv2d(num_filters=16,filter_size=3,  act='relu')
-        self.fc2 = layers.conv2d(num_filters=32,filter_size=3,  act='relu')
-        self.fc3 = layers.conv2d(num_filters=64,filter_size=3,  act='relu')
+        self.fc1 = layers.fc(size=200,  act='relu')
+        # self.fc2 = layers.conv2d(num_filters=32,filter_size=3,  act='relu')
+        # self.fc3 = layers.conv2d(num_filters=64,filter_size=3,  act='relu')
         self.fc4 = layers.fc(size=act_dim, act=None)
 
     def value(self, obs):
         hid1 = self.fc1(obs)
-        hid2 = self.fc2(hid1)
-        hid3 = self.fc3(hid2)
-        Q = self.fc4(hid3 )
+        # hid2 = self.fc2(hid1)
+        # hid3 = self.fc3(hid2)
+        Q = self.fc4(hid1 )
 
         # Q = self.res(obs)
         return Q
