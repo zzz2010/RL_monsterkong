@@ -15,7 +15,7 @@ dummy_mode=True ###check if the model can overfit simple linear reward function
 if dummy_mode:
     max_frames=10000
     GAMMA=0.0001
-    LEARNING_RATE=1e-3
+    LEARNING_RATE=1e-6
 
 def get_env_obs(ple_env,last_obs=None):
     obs = ple_env.getScreenGrayscale()

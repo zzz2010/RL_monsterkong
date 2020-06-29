@@ -3,34 +3,72 @@ from parl import layers
 import paddle.fluid as fluid
 import numpy as np
 
-
-class ActorModel(parl.Model):
+class ShareSubModel(parl.Model):
     def __init__(self, act_dim):
-        ######################################################################
-        ######################################################################
-        #
-        # 2. 请配置model结构
-        hid_size = 100
+        self.conv1 = layers.conv2d(num_filters=16,filter_size=3,  act='relu')
+        self.conv2 = layers.conv2d(num_filters=32,filter_size=3,  act='relu')
+        self.conv3 = layers.conv2d(num_filters=64,filter_size=3,  act='relu')
+        self.fc4 = layers.fc(size=act_dim, act='relu')
+        self.fc5 = layers.fc(size=act_dim, act='relu')
 
-        self.fc1 = layers.fc(size=hid_size, act='relu')
-        self.fc3 = layers.fc(size=hid_size, act='relu')
-        self.fc2 = layers.fc(size=act_dim, act='softmax')
-        ######################################################################
-        ######################################################################
+        self.fc_k = layers.fc(size=act_dim, act='relu')
 
     def policy(self, obs):
-        ######################################################################
-        ######################################################################
-        #
-        # 3. 请组装policy网络
-        #
-        hid = self.fc1(obs)
-        hid = self.fc3(hid)
-        logits = self.fc2(hid)
-
-        ######################################################################
-        ######################################################################
+        hid1 = self.conv1(obs)
+        hid2 = self.conv2(hid1)
+        hid3 = self.conv3(hid2)
+        hid4 = self.fc4(hid3)
+        hid4_1=self.fc_k(obs)
+        logits=self.fc5(hid4+hid4_1)
         return logits
+
+class ActorModel(parl.Model):
+
+    def __init__(self, act_dim):
+        self.conv1 = layers.conv2d(num_filters=16,filter_size=3,  act='relu')
+        self.conv2 = layers.conv2d(num_filters=32,filter_size=3,  act='relu')
+        self.conv3 = layers.conv2d(num_filters=64,filter_size=3,  act='relu')
+        self.fc4 = layers.fc(size=act_dim, act='relu')
+        self.fc5 = layers.fc(size=act_dim, act='softmax')
+
+        self.fc_k = layers.fc(size=act_dim, act='relu')
+
+    def policy(self, obs):
+        hid1 = self.conv1(obs)
+        hid2 = self.conv2(hid1)
+        hid3 = self.conv3(hid2)
+        hid4 = self.fc4(hid3)
+        hid4_1=self.fc_k(obs)
+        logits=self.fc5(hid4+hid4_1)
+        return logits
+
+
+    # def __init__(self, act_dim):
+    #     ######################################################################
+    #     ######################################################################
+    #     #
+    #     # 2. 请配置model结构
+    #     hid_size = 100
+    #
+    #     self.fc1 = layers.fc(size=hid_size, act='relu')
+    #     self.fc3 = layers.fc(size=hid_size, act='relu')
+    #     self.fc2 = layers.fc(size=act_dim, act='softmax')
+    #     ######################################################################
+    #     ######################################################################
+    #
+    # def policy(self, obs):
+    #     ######################################################################
+    #     ######################################################################
+    #     #
+    #     # 3. 请组装policy网络
+    #     #
+    #     hid = self.fc1(obs)
+    #     hid = self.fc3(hid)
+    #     logits = self.fc2(hid)
+    #
+    #     ######################################################################
+    #     ######################################################################
+    #     return logits
 
 
 class CriticModel(parl.Model):
@@ -43,7 +81,7 @@ class CriticModel(parl.Model):
         hid_size = 100
 
         self.fc1 = layers.fc(size=hid_size, act='relu')
-        self.fc3 = layers.fc(size=hid_size, act='relu')
+        # self.fc3 = layers.fc(size=hid_size, act='relu')
         self.fc2 = layers.fc(size=1, act=None)
         ######################################################################
         ######################################################################
@@ -59,8 +97,8 @@ class CriticModel(parl.Model):
         flatten_obs=layers.flatten(obs, axis=1)
         concat = layers.concat([flatten_obs, act], axis=1)
         hid = self.fc1(concat)
-        hid2 = self.fc3(hid)
-        Q = self.fc2(hid2)
+        # hid2 = self.fc3(hid)
+        Q = self.fc2(hid)
         Q2 = layers.squeeze(Q, axes=[1])
         return Q2
 
