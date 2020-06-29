@@ -20,14 +20,19 @@ class ShareSubModel(parl.Model):
 
 
     def forward(self, obs):
+        use_max_pool=False
+
         hid1 = self.conv1(obs)
-        hid1 = layers.pool2d(hid1,pool_size=2)
+        if use_max_pool:
+            hid1 = layers.pool2d(hid1,pool_size=2)
         hid1 = self.bn1(hid1)
         hid2 = self.conv2(hid1)
-        hid2 = layers.pool2d(hid2,pool_size=2)
+        if use_max_pool:
+            hid2 = layers.pool2d(hid2,pool_size=2)
         hid2 = self.bn2(hid2)
         hid3 = self.conv3(hid2)
-        hid3 = layers.pool2d(hid3,pool_size=2)
+        if use_max_pool:
+            hid3 = layers.pool2d(hid3,pool_size=2)
         hid3 = self.bn2(hid3)
         hid4 = self.fc4(hid3)
         flatten_obs=layers.flatten(obs, axis=1)
