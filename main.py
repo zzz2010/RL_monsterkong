@@ -19,6 +19,19 @@ if dummy_mode:
 
 def get_env_obs(ple_env,last_obs=None):
     obs = ple_env.getScreenGrayscale()
+
+    box_pos_tup = np.where(obs == 133)
+    if len(box_pos_tup ) > 1:
+        if len(box_pos_tup[1]) > 1:
+            box_pos_x, box_pos_y = box_pos_tup[0][1], box_pos_tup[1][1]
+            snake_pos_tup = np.where(obs == 54)
+            if len(snake_pos_tup[0]) == 0:
+                snake_pos_tup = np.where(obs == 212)
+            if len(snake_pos_tup[1]) > 1:
+                snake_pos_x,snake_pos_y=snake_pos_tup[0][1],snake_pos_tup[1][1]
+
+            obs[-1,-4:]=[box_pos_x, box_pos_y,snake_pos_x,snake_pos_y]
+
     if last_obs is not None:
         return np.concatenate([last_obs[1:, :],obs[np.newaxis, :]])
     else:
