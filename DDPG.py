@@ -11,35 +11,24 @@ class ShareSubModel(parl.Model):
         self.fc4 = layers.fc(size=act_dim, act='relu')
         self.fc5 = layers.fc(size=act_dim, act='relu')
 
-        self.fc_k = layers.fc(size=act_dim, act='relu')
 
-    def policy(self, obs):
+    def forward(self, obs):
         hid1 = self.conv1(obs)
         hid2 = self.conv2(hid1)
         hid3 = self.conv3(hid2)
         hid4 = self.fc4(hid3)
-        hid4_1=self.fc_k(obs)
-        logits=self.fc5(hid4+hid4_1)
+        flatten_obs=layers.flatten(obs, axis=1)
+        concat = layers.concat([flatten_obs, hid4], axis=1)
+        logits=self.fc5(concat)
         return logits
 
 class ActorModel(parl.Model):
 
     def __init__(self, act_dim):
-        self.conv1 = layers.conv2d(num_filters=16,filter_size=3,  act='relu')
-        self.conv2 = layers.conv2d(num_filters=32,filter_size=3,  act='relu')
-        self.conv3 = layers.conv2d(num_filters=64,filter_size=3,  act='relu')
-        self.fc4 = layers.fc(size=act_dim, act='relu')
         self.fc5 = layers.fc(size=act_dim, act='softmax')
 
-        self.fc_k = layers.fc(size=act_dim, act='relu')
-
-    def policy(self, obs):
-        hid1 = self.conv1(obs)
-        hid2 = self.conv2(hid1)
-        hid3 = self.conv3(hid2)
-        hid4 = self.fc4(hid3)
-        hid4_1=self.fc_k(obs)
-        logits=self.fc5(hid4+hid4_1)
+    def policy(self, hidden):
+        logits=self.fc5(hidden)
         return logits
 
 
@@ -81,12 +70,11 @@ class CriticModel(parl.Model):
         hid_size = 100
 
         self.fc1 = layers.fc(size=hid_size, act='relu')
-        # self.fc3 = layers.fc(size=hid_size, act='relu')
         self.fc2 = layers.fc(size=1, act=None)
         ######################################################################
         ######################################################################
 
-    def value(self, obs, act):
+    def value(self, hidden, act):
         # 输入 state, action, 输出对应的Q(s,a)
 
         ######################################################################
@@ -94,27 +82,27 @@ class CriticModel(parl.Model):
         #
         # 5. 请组装Q网络
         #
-        flatten_obs=layers.flatten(obs, axis=1)
+        flatten_obs=layers.flatten(hidden, axis=1)
         concat = layers.concat([flatten_obs, act], axis=1)
         hid = self.fc1(concat)
-        # hid2 = self.fc3(hid)
         Q = self.fc2(hid)
         Q2 = layers.squeeze(Q, axes=[1])
         return Q2
 
 class Model(parl.Model):
     def __init__(self, act_dim):
+        self.share_model = ShareSubModel(act_dim)
         self.actor_model = ActorModel(act_dim)
         self.critic_model = CriticModel()
 
     def policy(self, obs):
-        return self.actor_model.policy(obs)
+        return self.actor_model.policy( self.share_model(obs))
 
     def value(self, obs, act):
-        return self.critic_model.value(obs, act)
+        return self.critic_model.value(self.share_model(obs), act)
 
     def get_actor_params(self):
-        return self.actor_model.parameters()
+        return self.actor_model.parameters()+self.share_model.parameters()
 
 
 class Agent(parl.Agent):

@@ -11,7 +11,7 @@ from parl.algorithms.fluid import DDPG as RL_Alg
 from DDPG import  Model,Agent
 # from fc_dqn import  Model,Agent
 
-dummy_mode=True ###check if the model can overfit simple linear reward function
+dummy_mode=False ###check if the model can overfit simple linear reward function
 if dummy_mode:
     max_frames=10000
     GAMMA=0.0001
