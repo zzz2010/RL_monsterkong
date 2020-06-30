@@ -27,14 +27,14 @@ class Model(parl.Model):
         # Q = self.res(obs)
         return Q
 
-# @parl.remote_class
+
 class Agent(parl.Agent):
     def __init__(self,
                  algorithm,
                  obs_dim,
                  act_dim,
-                  e_greed=e_greed,
-                 e_greed_decrement=0.00001):
+                 e_greed=0.1,
+                 e_greed_decrement=0):
 
         assert isinstance(act_dim, int)
         self.obs_dim = obs_dim
@@ -68,10 +68,15 @@ class Agent(parl.Agent):
 
     def sample(self, obs):
         sample = np.random.rand()  # 产生0~1之间的小数
+
         if sample < self.e_greed:
-            act = np.random.randint(self.act_dim)  # 探索：每个动作都有概率被选择
+            act = np.random.rand(self.act_dim) #np.random.randint(self.act_dim)  # 探索：每个动作都有概率被选择
+            act =act/np.sum(act)
         else:
             act = self.predict(obs)  # 选择最优动作
+            act+=1e-20-np.min(act)
+            act = act / np.sum(act)
+
         self.e_greed = max(
             0.01, self.e_greed - self.e_greed_decrement)  # 随着训练逐步收敛，探索的程度慢慢降低
         return act
@@ -83,15 +88,15 @@ class Agent(parl.Agent):
             feed={'obs': obs.astype('float32')},
             fetch_list=[self.value])[0]
         pred_Q = np.squeeze(pred_Q, axis=0)
-        act = np.argmax(pred_Q)  # 选择Q最大的下标，即对应的动作
-        return act
+
+        return pred_Q
 
     def learn(self, obs, act, reward, next_obs, terminal):
         # 每隔200个training steps同步一次model和target_model的参数
         if self.global_step % self.update_target_steps == 0:
             self.alg.sync_target()
         self.global_step += 1
-        act = np.expand_dims(act, -1)
+        act = np.expand_dims(np.argmax(act,axis=1), -1)
         feed = {
             'obs': obs.astype('float32'),
             'act': act.astype('int32'),

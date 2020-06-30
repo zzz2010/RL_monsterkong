@@ -3,13 +3,19 @@ from ple.games.pixelcopter import Pixelcopter as GameEnv
 from ple import PLE
 import parl
 from parl.utils import logger
-# from parl.algorithms.fluid import DQN as RL_Alg
+
 import numpy as np
 from config import *
 # from cnn_dqn import  Model,Agent
-from parl.algorithms.fluid import DDPG as RL_Alg
-from DDPG import  Model,Agent
-# from fc_dqn import  Model,Agent
+
+MODE="DQN"
+if MODE=="DDPG":
+    from parl.algorithms.fluid import DDPG as RL_Alg
+    from DDPG import  Model,Agent
+
+if MODE=="DQN":
+    from parl.algorithms.fluid import DQN as RL_Alg
+    from fc_dqn import  Model,Agent
 
 dummy_mode=False ###check if the model can overfit simple linear reward function
 if dummy_mode:
@@ -160,7 +166,7 @@ def main():
     #     pygame.display.set_mode((800, 600 + 60))
     # 创建环境
     game = GameEnv()
-    p = PLE(game, display_screen=render_bool, fps=10,
+    p = PLE(game, display_screen=render_bool, fps=30,
             force_fps=True)  # , fps=30, display_screen=render_bool, force_fps=True)
 
 
@@ -173,17 +179,20 @@ def main():
     act_dim = len(p.getActionSet())
     width, height = p.getScreenDims()
     rpm = ReplayMemory(MEMORY_SIZE)  # DQN的经验回放池
-    obs_dim = 2, width, height
+    obs_dim = get_env_obs(p).shape
     model = Model(act_dim=act_dim)
-    alg = RL_Alg(model,gamma=GAMMA, tau=0.001, actor_lr=LEARNING_RATE, critic_lr=LEARNING_RATE  )
+    if MODE=="DDPG":
+        alg = RL_Alg(model,gamma=GAMMA, tau=0.001, actor_lr=LEARNING_RATE, critic_lr=LEARNING_RATE  )
+    if MODE=="DQN":
+        alg = RL_Alg(model,gamma=GAMMA,  lr=LEARNING_RATE ,act_dim=act_dim )
     agent = Agent(alg, obs_dim=obs_dim, act_dim=act_dim)  # e_greed有一定概率随机选取动作，探索
 
     # 加载模型
     best_eval_reward = -1000
-
-    if os.path.exists('./model_pixelcopter.ckpt'):
-        print("loaded model:", './model_pixelcopter.ckpt')
-        agent.restore('./model_pixelcopter.ckpt')
+    cache_fn='./model_pixelcopter_%s.ckpt'%MODE
+    if os.path.exists(cache_fn):
+        print("loaded model:", cache_fn)
+        agent.restore(cache_fn)
         best_eval_reward = evaluate(p, agent, render=render_bool)
         # run_episode(env, agent, train_or_test='test', render=True)
         # exit()
@@ -206,10 +215,10 @@ def main():
             episode, e_greed, eval_reward))
 
         # 保存模型到文件 ./model.ckpt
-        agent.save('./model_pixelcopter_%d.ckpt' % rate_num)
+        agent.save(cache_fn+"."+str(rate_num))
         if best_eval_reward < eval_reward:
             best_eval_reward = eval_reward
-            agent.save('./model_pixelcopter.ckpt')
+            agent.save(cache_fn)
 
 
 if __name__ == '__main__':
