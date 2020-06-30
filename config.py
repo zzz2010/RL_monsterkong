@@ -5,10 +5,10 @@ LEARN_FREQ = 1  # 训练频率，不需要每一个step都learn，攒一些新�
 MEMORY_SIZE = 60000  # replay memory的大小，越大越占用内存
 MEMORY_WARMUP_SIZE = 200  # replay_memory 里需要预存一些经验数据，再开启训练
 BATCH_SIZE = 64  # 每次给agent learn的数据数量，从replay memory随机里sample一批数据出来
-rate_num = 1
+rate_num = 1000
 LEARNING_RATE = 1e-6* rate_num  # 学习率
 GAMMA = 0.99  # reward 的衰减因子，一般取 0.9 到 0.999 不等
-max_frames = 10000
+max_frames = 1000
 e_greed=1
 render_bool = False
 

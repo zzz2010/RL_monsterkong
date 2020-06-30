@@ -5,39 +5,40 @@ import numpy as np
 
 class ShareSubModel(parl.Model):
     def __init__(self, act_dim):
-        self.conv1 = layers.conv2d(num_filters=16,filter_size=3,  act='relu')
-
-        self.bn1= fluid.layers.batch_norm
-        self.conv2 = layers.conv2d(num_filters=32,filter_size=3,  act='relu')
-
-        self.bn2 = fluid.layers.batch_norm
-        self.conv3 = layers.conv2d(num_filters=64,filter_size=3,  act='relu')
-
-        self.bn3 = fluid.layers.batch_norm
-
-        self.fc4 = layers.fc(size=act_dim, act='relu')
+        # self.conv1 = layers.conv2d(num_filters=16,filter_size=3,  act='relu')
+        #
+        # self.bn1= fluid.layers.batch_norm
+        # self.conv2 = layers.conv2d(num_filters=32,filter_size=3,  act='relu')
+        #
+        # self.bn2 = fluid.layers.batch_norm
+        # self.conv3 = layers.conv2d(num_filters=64,filter_size=3,  act='relu')
+        #
+        # self.bn3 = fluid.layers.batch_norm
+        #
+        # self.fc4 = layers.fc(size=act_dim, act='relu')
         self.fc5 = layers.fc(size=act_dim, act='relu')
 
 
     def forward(self, obs):
-        use_max_pool=False
-
-        hid1 = self.conv1(obs)
-        if use_max_pool:
-            hid1 = layers.pool2d(hid1,pool_size=2)
-        hid1 = self.bn1(hid1)
-        hid2 = self.conv2(hid1)
-        if use_max_pool:
-            hid2 = layers.pool2d(hid2,pool_size=2)
-        hid2 = self.bn2(hid2)
-        hid3 = self.conv3(hid2)
-        if use_max_pool:
-            hid3 = layers.pool2d(hid3,pool_size=2)
-        hid3 = self.bn2(hid3)
-        hid4 = self.fc4(hid3)
-        flatten_obs=layers.flatten(obs, axis=1)
-        concat = layers.concat([flatten_obs, hid4], axis=1)
-        logits=self.fc5(concat)
+        # use_max_pool=False
+        #
+        # hid1 = self.conv1(obs)
+        # if use_max_pool:
+        #     hid1 = layers.pool2d(hid1,pool_size=2)
+        # hid1 = self.bn1(hid1)
+        # hid2 = self.conv2(hid1)
+        # if use_max_pool:
+        #     hid2 = layers.pool2d(hid2,pool_size=2)
+        # hid2 = self.bn2(hid2)
+        # hid3 = self.conv3(hid2)
+        # if use_max_pool:
+        #     hid3 = layers.pool2d(hid3,pool_size=2)
+        # hid3 = self.bn2(hid3)
+        # hid4 = self.fc4(hid3)
+        # flatten_obs=layers.flatten(obs, axis=1)
+        # concat = layers.concat([flatten_obs, hid4], axis=1)
+        # logits=self.fc5(concat)
+        logits = self.fc5(obs)
         return logits
 
 class ActorModel(parl.Model):

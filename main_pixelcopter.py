@@ -1,5 +1,5 @@
 import os, sys
-from ple.games.snake import Snake as GameEnv
+from ple.games.pixelcopter import Pixelcopter as GameEnv
 from ple import PLE
 import parl
 from parl.utils import logger
@@ -19,11 +19,14 @@ if dummy_mode:
 
 def get_obs(p):
     obs = np.array(list(p.getGameState().values()))
-    return np.array(obs[:4].tolist()+obs[4]+np.array(obs[5]).ravel().tolist())
+    obs[2:4] -= obs[0]
+    obs[5:7] -= obs[0]
+    obs = (obs / np.array([48, 10, 24, 24, 48, 24, 24])) - 0.5
+    return obs
 
 def get_env_obs(ple_env,last_obs=None):
-
-    obs=get_obs(ple_env)[np.newaxis, :13]
+    obs=get_obs(ple_env)
+    obs = ple_env.getScreenGrayscale()
     if last_obs is not None:
         return np.concatenate([last_obs[1:, :],obs[np.newaxis, :]])
     else:
@@ -90,8 +93,26 @@ def run_episode(ple_env, agent, rpm):
     return total_reward
 
 
+import os.path
+import numpy as np
+from PIL import Image
+def numpy2pil(np_array: np.ndarray)  :
+    """
+    Convert an HxWx3 numpy array into an RGB Image
+    """
+
+    assert_msg = 'Input shall be a HxWx3 ndarray'
+    assert isinstance(np_array, np.ndarray), assert_msg
+    assert len(np_array.shape) == 3, assert_msg
+    assert np_array.shape[2] == 3, assert_msg
+
+    img = Image.fromarray(np_array, 'RGB')
+    return img
+
+best_test_score=-100000000
 # 评估 agent, 跑 5 个episode，总reward求平均
 def evaluate(ple_env, agent, render=False):
+    global best_test_score
     eval_reward = []
 
     for i in range(5):
@@ -101,6 +122,7 @@ def evaluate(ple_env, agent, render=False):
         last_obs=obs
         episode_reward = 0
         step=0
+        image_list=[]
         while step<max_frames:
             step+=1
             action_index = np.argmax(agent.predict(obs))  # 选取最优动作
@@ -115,14 +137,20 @@ def evaluate(ple_env, agent, render=False):
             episode_reward += reward
             if render:
                 img = ple_env.getScreenRGB()
+                image_list.append(numpy2pil(img).rotate(90).resize((300,300)))
             if ple_env.game_over():
                 break
+        if render and best_test_score<episode_reward:
+            best_test_score=episode_reward
+            image_list[0].save('pillow_imagedraw.gif',
+                       save_all=True, append_images=image_list[1:], optimize=False, duration=40, loop=0)
         eval_reward.append(episode_reward)
     return np.mean(eval_reward)
 
 
 def main():
     global render_bool
+    render_bool=True
     # parl.connect('localhost:8037')
     if dummy_mode:
         render_bool=False
@@ -132,7 +160,7 @@ def main():
     #     pygame.display.set_mode((800, 600 + 60))
     # 创建环境
     game = GameEnv()
-    p = PLE(game, display_screen=render_bool, fps=1,
+    p = PLE(game, display_screen=render_bool, fps=10,
             force_fps=True)  # , fps=30, display_screen=render_bool, force_fps=True)
 
 
@@ -145,7 +173,7 @@ def main():
     act_dim = len(p.getActionSet())
     width, height = p.getScreenDims()
     rpm = ReplayMemory(MEMORY_SIZE)  # DQN的经验回放池
-    obs_dim = 2, 1, 13
+    obs_dim = 2, width, height
     model = Model(act_dim=act_dim)
     alg = RL_Alg(model,gamma=GAMMA, tau=0.001, actor_lr=LEARNING_RATE, critic_lr=LEARNING_RATE  )
     agent = Agent(alg, obs_dim=obs_dim, act_dim=act_dim)  # e_greed有一定概率随机选取动作，探索
@@ -153,9 +181,9 @@ def main():
     # 加载模型
     best_eval_reward = -1000
 
-    if os.path.exists('./model_dqn.ckpt'):
-        print("loaded model:", './model_dqn.ckpt')
-        agent.restore('./model_dqn.ckpt')
+    if os.path.exists('./model_pixelcopter.ckpt'):
+        print("loaded model:", './model_pixelcopter.ckpt')
+        agent.restore('./model_pixelcopter.ckpt')
         best_eval_reward = evaluate(p, agent, render=render_bool)
         # run_episode(env, agent, train_or_test='test', render=True)
         # exit()
@@ -178,10 +206,10 @@ def main():
             episode, e_greed, eval_reward))
 
         # 保存模型到文件 ./model.ckpt
-        agent.save('./model_dqn_%d.ckpt' % rate_num)
+        agent.save('./model_pixelcopter_%d.ckpt' % rate_num)
         if best_eval_reward < eval_reward:
             best_eval_reward = eval_reward
-            agent.save('./model_dqn.ckpt')
+            agent.save('./model_pixelcopter.ckpt')
 
 
 if __name__ == '__main__':
