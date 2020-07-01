@@ -32,7 +32,7 @@ def get_obs(p):
 
 def get_env_obs(ple_env,last_obs=None):
     obs=get_obs(ple_env)
-    obs = ple_env.getScreenGrayscale()
+    # obs = ple_env.getScreenGrayscale()
     if last_obs is not None:
         return np.concatenate([last_obs[1:, :],obs[np.newaxis, :]])
     else:
@@ -184,7 +184,8 @@ def main():
     if MODE=="DDPG":
         alg = RL_Alg(model,gamma=GAMMA, tau=0.001, actor_lr=LEARNING_RATE, critic_lr=LEARNING_RATE  )
     if MODE=="DQN":
-        alg = RL_Alg(model,gamma=GAMMA,  lr=LEARNING_RATE ,act_dim=act_dim )
+        alg = RL_Alg(model,gamma=GAMMA,  lr=LEARNING_RATE ,act_dim=act_dim, e_greed=e_greed,
+                 e_greed_decrement=1e-6 )
     agent = Agent(alg, obs_dim=obs_dim, act_dim=act_dim)  # e_greed有一定概率随机选取动作，探索
 
     # 加载模型
