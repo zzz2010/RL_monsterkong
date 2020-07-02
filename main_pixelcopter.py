@@ -184,8 +184,7 @@ def main():
     if MODE=="DDPG":
         alg = RL_Alg(model,gamma=GAMMA, tau=0.001, actor_lr=LEARNING_RATE, critic_lr=LEARNING_RATE  )
     if MODE=="DQN":
-        alg = RL_Alg(model,gamma=GAMMA,  lr=LEARNING_RATE ,act_dim=act_dim, e_greed=e_greed,
-                 e_greed_decrement=1e-6 )
+        alg = RL_Alg(model,gamma=GAMMA,  lr=LEARNING_RATE ,act_dim=act_dim )
     agent = Agent(alg, obs_dim=obs_dim, act_dim=act_dim)  # e_greed有一定概率随机选取动作，探索
 
     # 加载模型

@@ -14,15 +14,16 @@ class Model(parl.Model):
 
         # ResNet
         self.fc1 = layers.fc(size=200,  act='relu')
+        self.fc2 = layers.fc(size=64,  act='relu')
         # self.fc2 = layers.conv2d(num_filters=32,filter_size=3,  act='relu')
         # self.fc3 = layers.conv2d(num_filters=64,filter_size=3,  act='relu')
         self.fc4 = layers.fc(size=act_dim, act=None)
 
     def value(self, obs):
         hid1 = self.fc1(obs)
-        # hid2 = self.fc2(hid1)
+        hid2 = self.fc2(hid1)
         # hid3 = self.fc3(hid2)
-        Q = self.fc4(hid1 )
+        Q = self.fc4(hid2 )
 
         # Q = self.res(obs)
         return Q
@@ -34,7 +35,7 @@ class Agent(parl.Agent):
                  obs_dim,
                  act_dim,
                  e_greed=0.1,
-                 e_greed_decrement=0):
+                 e_greed_decrement=1e-6):
 
         assert isinstance(act_dim, int)
         self.obs_dim = obs_dim
